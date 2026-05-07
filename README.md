@@ -43,15 +43,6 @@ node index.js
 
 ---
 
-## Admin Login
-| Field    | Value      |
-|----------|------------|
-| Username | `admin`    |
-| Password | `admin123` |
-
-> ⚠️ **Change the password** in `routes/admin.js` line 22 before deployment.
-
----
 
 ## Project Structure
 ```
