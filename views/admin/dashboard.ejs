@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080a0e; --bg2: #0d1117; --surface: #111520; --surface2: #161c2d;
+      --gold: #c9a84c; --gold2: #e8c97a; --text: #e8e4d8; --text-muted: #8a8680;
+      --text-dim: #5a5650; --border: rgba(201,168,76,0.12); --red: #e07070;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0; width: 260px;
+      background: var(--bg2); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 50; padding: 2rem 0;
+    }
+    .sidebar-logo { padding: 0 2rem 2rem; border-bottom: 1px solid var(--border); font-family: 'DM Mono', monospace; font-size: 0.72rem; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; }
+    .sidebar-menu { flex: 1; padding: 1.5rem 0; }
+    .tab-btn {
+      display: flex; align-items: center; gap: 0.75rem; width: 100%;
+      padding: 0.85rem 2rem; background: none; border: none; border-left: 2px solid transparent;
+      color: var(--text-muted); font-family: 'DM Mono', monospace; font-size: 0.72rem;
+      letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s; text-align: left;
+    }
+    .tab-btn:hover, .tab-btn.active {
+      color: var(--gold); border-left-color: var(--gold);
+      background: rgba(201,168,76,0.05);
+    }
+    .sidebar-footer { padding: 1.5rem 2rem; border-top: 1px solid var(--border); }
+    .sidebar-footer a {
+      font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--text-dim);
+      text-decoration: none; letter-spacing: 0.12em; transition: color 0.2s;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .sidebar-footer a:hover { color: var(--gold); }
+
+    /* MAIN */
+    .main { margin-left: 260px; padding: 2.5rem 3rem; min-height: 100vh; }
+    .main-header { margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .main-header h1 { font-size: 1.5rem; font-weight: 700; }
+    .main-header span { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.12em; }
+
+    /* TABS */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* CARDS */
+    .card {
+      border: 1px solid var(--border); background: var(--surface);
+      padding: 2rem; margin-bottom: 2rem;
+    }
+    .card-title { font-family: 'DM Mono', monospace; font-size: 0.72rem; letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; margin-bottom: 1.5rem; }
+
+    /* FORM ELEMENTS */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-family: 'DM Mono', monospace; font-size: 0.67rem; letter-spacing: 0.18em; color: var(--text-muted); text-transform: uppercase; }
+    input, textarea, select {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      font-family: 'Syne', sans-serif; font-size: 0.88rem; padding: 0.75rem 1rem;
+      outline: none; transition: border-color 0.2s; width: 100%; resize: vertical;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+    input[type="file"] { padding: 0.5rem 1rem; font-size: 0.8rem; }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1.75rem; border: 1px solid var(--gold);
+      background: transparent; color: var(--gold); font-family: 'DM Mono', monospace;
+      font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.3s, color 0.3s;
+    }
+    .btn:hover { background: var(--gold); color: var(--bg); }
+    .btn-danger {
+      border-color: var(--red); color: var(--red);
+    }
+    .btn-danger:hover { background: var(--red); color: white; }
+    .btn-sm { padding: 0.45rem 1rem; font-size: 0.65rem; }
+
+    /* TABLES */
+    table { width: 100%; border-collapse: collapse; }
+    th { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+    td { padding: 0.9rem 1rem; border-bottom: 1px solid rgba(201,168,76,0.05); font-size: 0.88rem; color: var(--text-muted); }
+    tr:hover td { background: rgba(201,168,76,0.03); }
+    .badge { display: inline-block; padding: 0.2rem 0.6rem; font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--border); color: var(--text-dim); }
+
+    /* ALERT */
+    .alert { padding: 0.85rem 1.25rem; font-family: 'DM Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; margin-bottom: 1.5rem; }
+    .alert-success { background: rgba(201,168,76,0.08); border: 1px solid var(--gold); color: var(--gold); }
+    .alert-error { background: rgba(220,80,80,0.08); border: 1px solid var(--red); color: var(--red); }
+
+    /* STATS */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { border: 1px solid var(--border); background: var(--surface); padding: 1.5rem; position: relative; overflow: hidden; }
+    .stat-card::after { content: ''; position: absolute; inset: 0; background: rgba(201,168,76,0.03); }
+    .stat-n { font-family: 'DM Mono', monospace; font-size: 2.25rem; color: var(--gold); line-height: 1; }
+    .stat-l { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; margin-top: 0.4rem; }
+    .stat-icon { position: absolute; right: 1.5rem; top: 1.5rem; font-size: 1.5rem; color: var(--border); }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <div class="sidebar-logo">✦ Admin Panel</div>
+    <div class="sidebar-menu">
+      <button class="tab-btn active" data-tab="overview"><i class="fas fa-chart-bar fa-fw"></i> Overview</button>
+      <button class="tab-btn" data-tab="profile"><i class="fas fa-user fa-fw"></i> Profile</button>
+      <button class="tab-btn" data-tab="skills"><i class="fas fa-code fa-fw"></i> Skills</button>
+      <button class="tab-btn" data-tab="projects"><i class="fas fa-folder fa-fw"></i> Projects</button>
+      <button class="tab-btn" data-tab="education"><i class="fas fa-graduation-cap fa-fw"></i> Education</button>
+      <button class="tab-btn" data-tab="messages"><i class="fas fa-envelope fa-fw"></i> Messages</button>
+    </div>
+    <div class="sidebar-footer">
+      <a href="/" target="_blank"><i class="fas fa-external-link-alt"></i> View Portfolio</a>
+      <br/><br/>
+      <a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="main-header">
+      <div>
+        <h1>Dashboard</h1>
+        <span>Manage your portfolio content</span>
+      </div>
+      <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-dim);">Welcome, Admin</span>
+    </div>
+
+    <% var q = typeof query !== 'undefined' ? query : {}; %>
+    <% if (q.success) { %><div class="alert alert-success">✓ Saved successfully</div><% } %>
+    <% if (q.error) { %><div class="alert alert-error">✕ An error occurred. Please try again.</div><% } %>
+
+    <!-- OVERVIEW -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-n"><%= projects.length %></div><div class="stat-l">Projects</div><i class="fas fa-folder stat-icon"></i></div>
+        <div class="stat-card"><div class="stat-n"><%= skills.length %></div><div class="stat-l">Skills</div><i class="fas fa-code stat-icon"></i></div>
+        <div class="stat-card"><div class="stat-n"><%= education.length %></div><div class="stat-l">Education</div><i class="fas fa-graduation-cap stat-icon"></i></div>
+        <div class="stat-card"><div class="stat-n"><%= messages.length %></div><div class="stat-l">Messages</div><i class="fas fa-envelope stat-icon"></i></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Quick Info</div>
+        <p style="font-size:0.88rem;color:var(--text-muted);line-height:1.8;">
+          Use the sidebar to manage your portfolio sections. Changes are saved to the database and instantly reflected on your public portfolio page.
+          <br/><br/>
+          Default admin login: <code style="color:var(--gold);">admin / admin123</code> — change this in <code style="color:var(--gold);">routes/admin.js</code>.
+        </p>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="tab-panel" id="tab-profile">
+      <div class="card">
+        <div class="card-title">Profile Information</div>
+        <form action="/admin/profile/save" method="POST" enctype="multipart/form-data">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" name="name" value="<%= profile.name || '' %>" placeholder="Your Full Name" required />
+            </div>
+            <div class="form-group">
+              <label>Professional Title</label>
+              <input type="text" name="title" value="<%= profile.title || '' %>" placeholder="e.g. Full Stack Developer" />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" name="email" value="<%= profile.email || '' %>" placeholder="your@email.com" />
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="text" name="phone" value="<%= profile.phone || '' %>" placeholder="+91 XXXXX XXXXX" />
+            </div>
+            <div class="form-group">
+              <label>GitHub URL</label>
+              <input type="url" name="github" value="<%= profile.github || '' %>" placeholder="https://github.com/username" />
+            </div>
+            <div class="form-group">
+              <label>LinkedIn URL</label>
+              <input type="url" name="linkedin" value="<%= profile.linkedin || '' %>" placeholder="https://linkedin.com/in/username" />
+            </div>
+            <div class="form-group full">
+              <label>Bio / About Me</label>
+              <textarea name="bio" rows="4" placeholder="Write something about yourself..."><%= profile.bio || '' %></textarea>
+            </div>
+            <div class="form-group full">
+              <label>Profile Photo</label>
+              <% if (profile.photo) { %><img src="/<%= profile.photo %>" style="height:80px;margin-bottom:0.75rem;border:1px solid var(--border);" /><br/><% } %>
+              <input type="file" name="photo" accept="image/*" />
+            </div>
+          </div>
+          <button type="submit" class="btn" style="margin-top:1.5rem;"><i class="fas fa-save"></i> Save Profile</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="tab-panel" id="tab-skills">
+      <div class="card">
+        <div class="card-title">Add New Skill</div>
+        <form action="/admin/skill/add" method="POST" enctype="multipart/form-data">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Skill Name</label>
+              <input type="text" name="name" placeholder="e.g. React.js" required />
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <input type="text" name="category" placeholder="e.g. Frontend, Backend, Database" />
+            </div>
+            <div class="form-group">
+              <label>Proficiency Level (0–100)</label>
+              <input type="number" name="level" min="0" max="100" placeholder="80" />
+            </div>
+            <div class="form-group">
+              <label>Icon Image (optional)</label>
+              <input type="file" name="icon" accept="image/*" />
+            </div>
+          </div>
+          <button type="submit" class="btn" style="margin-top:1.25rem;"><i class="fas fa-plus"></i> Add Skill</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-title">Existing Skills</div>
+        <% if (skills.length > 0) { %>
+        <table>
+          <thead><tr><th>Icon</th><th>Name</th><th>Category</th><th>Level</th><th>Actions</th></tr></thead>
+          <tbody>
+            <% skills.forEach(s => { %>
+            <tr>
+              <td><% if (s.icon) { %><img src="/<%= s.icon %>" style="height:28px;width:28px;object-fit:contain;" /><% } else { %>—<% } %></td>
+              <td><%= s.name %></td>
+              <td><span class="badge"><%= s.category || '—' %></span></td>
+              <td><%= s.level || 80 %>%</td>
+              <td>
+                <form method="POST" action="/admin/skill/delete/<%= s.id %>" style="display:inline;" onsubmit="return confirm('Delete this skill?')">
+                  <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Delete</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } else { %><p style="color:var(--text-dim);font-size:0.85rem;">No skills added yet.</p><% } %>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="tab-panel" id="tab-projects">
+      <div class="card">
+        <div class="card-title">Add New Project</div>
+        <form action="/admin/project/add" method="POST" enctype="multipart/form-data">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Project Title</label>
+              <input type="text" name="title" placeholder="e.g. E-Commerce Platform" required />
+            </div>
+            <div class="form-group">
+              <label>Technologies Used</label>
+              <input type="text" name="tech" placeholder="e.g. Node.js, MySQL, EJS" />
+            </div>
+            <div class="form-group">
+              <label>GitHub URL</label>
+              <input type="url" name="github_url" placeholder="https://github.com/..." />
+            </div>
+            <div class="form-group">
+              <label>Live Demo URL</label>
+              <input type="url" name="live_url" placeholder="https://yourapp.com" />
+            </div>
+            <div class="form-group full">
+              <label>Description</label>
+              <textarea name="description" rows="3" placeholder="Describe what the project does..."></textarea>
+            </div>
+            <div class="form-group full">
+              <label>Project Screenshot</label>
+              <input type="file" name="image" accept="image/*" />
+            </div>
+          </div>
+          <button type="submit" class="btn" style="margin-top:1.25rem;"><i class="fas fa-plus"></i> Add Project</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-title">Existing Projects</div>
+        <% if (projects.length > 0) { %>
+        <table>
+          <thead><tr><th>Preview</th><th>Title</th><th>Tech</th><th>Links</th><th>Actions</th></tr></thead>
+          <tbody>
+            <% projects.forEach(p => { %>
+            <tr>
+              <td><% if (p.image) { %><img src="/<%= p.image %>" style="height:40px;width:70px;object-fit:cover;border:1px solid var(--border);" /><% } else { %>—<% } %></td>
+              <td><strong style="color:var(--text);"><%= p.title %></strong></td>
+              <td><span class="badge"><%= (p.tech || '').substring(0,20) %></span></td>
+              <td>
+                <% if (p.github_url) { %><a href="<%= p.github_url %>" target="_blank" style="color:var(--gold);font-size:0.8rem;margin-right:0.75rem;"><i class="fab fa-github"></i></a><% } %>
+                <% if (p.live_url) { %><a href="<%= p.live_url %>" target="_blank" style="color:var(--gold);font-size:0.8rem;"><i class="fas fa-external-link-alt"></i></a><% } %>
+              </td>
+              <td>
+                <form method="POST" action="/admin/project/delete/<%= p.id %>" style="display:inline;" onsubmit="return confirm('Delete this project?')">
+                  <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Delete</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } else { %><p style="color:var(--text-dim);font-size:0.85rem;">No projects added yet.</p><% } %>
+      </div>
+    </div>
+
+    <!-- EDUCATION -->
+    <div class="tab-panel" id="tab-education">
+      <div class="card">
+        <div class="card-title">Add Education</div>
+        <form action="/admin/education/add" method="POST">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Degree / Qualification</label>
+              <input type="text" name="degree" placeholder="e.g. BCA, B.Tech, HSC" required />
+            </div>
+            <div class="form-group">
+              <label>Institution</label>
+              <input type="text" name="institution" placeholder="e.g. XYZ University" required />
+            </div>
+            <div class="form-group">
+              <label>Year (e.g. 2022–2025)</label>
+              <input type="text" name="year" placeholder="2022–2025" />
+            </div>
+            <div class="form-group">
+              <label>Grade / Score</label>
+              <input type="text" name="grade" placeholder="e.g. 8.5 CGPA, 85%" />
+            </div>
+          </div>
+          <button type="submit" class="btn" style="margin-top:1.25rem;"><i class="fas fa-plus"></i> Add Education</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-title">Education Records</div>
+        <% if (education.length > 0) { %>
+        <table>
+          <thead><tr><th>Degree</th><th>Institution</th><th>Year</th><th>Grade</th><th>Actions</th></tr></thead>
+          <tbody>
+            <% education.forEach(e => { %>
+            <tr>
+              <td><strong style="color:var(--text);"><%= e.degree %></strong></td>
+              <td><%= e.institution %></td>
+              <td><%= e.year || '—' %></td>
+              <td><%= e.grade || '—' %></td>
+              <td>
+                <form method="POST" action="/admin/education/delete/<%= e.id %>" style="display:inline;" onsubmit="return confirm('Delete this record?')">
+                  <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Delete</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } else { %><p style="color:var(--text-dim);font-size:0.85rem;">No education records yet.</p><% } %>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="tab-panel" id="tab-messages">
+      <div class="card">
+        <div class="card-title">Contact Messages</div>
+        <% if (messages.length > 0) { %>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Message</th><th>Actions</th></tr></thead>
+          <tbody>
+            <% messages.forEach(m => { %>
+            <tr>
+              <td><strong style="color:var(--text);"><%= m.name %></strong></td>
+              <td><a href="mailto:<%= m.email %>" style="color:var(--gold);"><%= m.email %></a></td>
+              <td><%= (m.message || '').substring(0, 80) %><%= m.message && m.message.length > 80 ? '...' : '' %></td>
+              <td>
+                <form method="POST" action="/admin/message/delete/<%= m.id %>" style="display:inline;" onsubmit="return confirm('Delete this message?')">
+                  <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Delete</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } else { %><p style="color:var(--text-dim);font-size:0.85rem;">No messages received yet.</p><% } %>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Tab switching
+    const params = new URLSearchParams(window.location.search);
+    const initTab = params.get('tab') || 'overview';
+
+    function activateTab(name) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+    }
+    activateTab(initTab);
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+    });
+  </script>
+</body>
+</html>
