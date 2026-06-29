@@ -18,7 +18,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // Middleware
 app.use(bodyparser.urlencoded({ extended: true }));
 app.use(session({
-    secret: "portfolio_secret_key_2025",
+    secret: process.env.SESSION_SECRET || "portfolio_secret_key_2025",
     resave: true,
     saveUninitialized: true
 }));
@@ -39,7 +39,11 @@ app.use((req, res) => {
     res.status(404).send('<div style="text-align:center;padding:4rem;background:#080a0e;color:#c9a84c;font-family:monospace;min-height:100vh;">404 — Page not found <br/><br/><a href="/" style="color:#c9a84c;">← Go Home</a></div>');
 });
 
-var PORT = process.env.PORT || 1000;
-app.listen(PORT, () => {
-    console.log("✦ Portfolio running at http://localhost:" + PORT);
-});
+if (require.main === module) {
+    var PORT = process.env.PORT || 1000;
+    app.listen(PORT, () => {
+        console.log("Portfolio running at http://localhost:" + PORT);
+    });
+}
+
+module.exports = app;
