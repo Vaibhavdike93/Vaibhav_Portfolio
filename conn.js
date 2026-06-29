@@ -1,11 +1,15 @@
 var mysql = require("mysql");
 var util = require("util");
-var conn = mysql.createConnection({
-   host:"bjtrxolvxasictsolc1x-mysql.services.clever-cloud.com",
-   user:"uvujqxojf3tdrlr4",
-   password:"hwMTCa8Z3iLX1nNuXUvs",
-   database:"bjtrxolvxasictsolc1x" 
-});
- var exe = util.promisify(conn.query).bind(conn);
+var connectionConfig = process.env.MYSQL_URL
+   ? process.env.MYSQL_URL
+   : {
+      host: process.env.MYSQL_HOST,
+      user: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      database: process.env.MYSQL_DATABASE
+   };
 
- module.exports = exe;
+var conn = mysql.createConnection(connectionConfig);
+var exe = util.promisify(conn.query).bind(conn);
+
+module.exports = exe;
